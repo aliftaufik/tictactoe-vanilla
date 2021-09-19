@@ -1,6 +1,6 @@
 /** Constants */
 const colors ={
-  gray: 'bg-gray-100',
+  gray: 'bg-gray-200',
   o: {
     hover: 'hover:bg-[#ffd685]',
     owned: 'bg-[#ffc857]'
@@ -13,7 +13,7 @@ const colors ={
 
 let state = {
   turn: 'o',
-  board: ['','','','','','','','','']
+  board: new Array(9).fill('')
 }
 
 /** State Change Handler */
@@ -29,8 +29,76 @@ const handleButtonClick = (position) => {
   state = newState
 
   updateBoard(oldState, newState)
+
+  // Check winner every time button triggered
+  const winner = checkWinner()
+  if (winner) gameOver(winner)
 }
 
+const checkWinner = () => {
+  const board = [...state.board]
+  const indexList = board.map((_, index) => index)
+
+  const sideLength = Math.sqrt(board.length)
+
+  const diagonalDown = []
+  const diagonalDownIndex = []
+  
+  const diagonalUp = []
+  const diagonalUpIndex = []
+
+  // Custom function used to setup vertical range
+  const buildVertical = (list, outerIndex) => {
+    const vertical = []
+    for (let index = 0; index < sideLength; index++) {
+      vertical.push(list[index * sideLength + outerIndex])
+    }
+    return vertical
+  }
+
+  const validateRange = (items) => {
+    if (!items[0]) return false // If first item is empty string, don't bother checking next value
+    return items.every(item => item === items[0])
+  }
+
+  for (let index = 0; index < sideLength; index++) {
+    // Check horizontal range once per loop (by index)
+    // Sample:
+    // 0,1,2
+    // 3,4,5
+    // 6,7,8
+    const horizontal = board.slice(index * sideLength, index * sideLength + sideLength);
+    const horizontalIndex = indexList.slice(index * sideLength, index * sideLength + sideLength)
+    if (validateRange(horizontal)) return { winner: horizontal[0], range: horizontalIndex }
+    
+    // Check vertical range once per loop (by index)
+    // Sample:
+    // 0,3,6
+    // 1,4,7
+    // 2,5,8
+    const vertical = buildVertical(board, index);
+    const verticalIndex = buildVertical(indexList, index);
+    if (validateRange(vertical)) return { winner: vertical[0], range: verticalIndex }
+
+    // Using this loop to push diagonal range (will be validated later outside loop)
+    diagonalDown.push(board[index * sideLength + index])
+    diagonalDownIndex.push(indexList[index * sideLength + index])
+    
+    diagonalUp.push(board[(sideLength - index - 1) * sideLength + index])
+    diagonalUpIndex.push(indexList[(sideLength - index - 1) * sideLength + index])
+  }
+
+  // Validating diagonal range
+  // Sample:
+  // 0,4,8
+  // 6,4,2
+  if (validateRange(diagonalDown)) return { winner: diagonalDown[0], range: diagonalDownIndex }
+  if (validateRange(diagonalUp)) return { winner: diagonalUp[0], range: diagonalUpIndex }
+  return null
+}
+/** State Change Handler */
+
+/** UI Updater */
 const updateBoard = (oldState, newState) => {
   const buttonList = document.querySelectorAll('.btn')
 
@@ -72,7 +140,39 @@ const updateButtonTurn = (buttonElement, turn) => {
     buttonElement.classList.replace(colors.o.hover, colors.x.hover)
   }
 }
-/** State Change Handler */
+
+const updateButtonGameOver = (buttonElement, inRange) => {
+  if (inRange) {
+    buttonElement.parentElement.classList.replace('p-2', 'p-1')
+    return
+  }
+
+  buttonElement.classList.remove(colors.o.hover, colors.x.hover)
+  buttonElement.classList.add('opacity-25', 'cursor-default' )
+
+  buttonElement.parentElement.classList.remove('hover:p-1')
+
+  buttonElement.onclick = null
+}
+/** UI Updater */
+
+const gameOver = (winner) => {
+  const winnerElement = document.getElementById('winner')
+  winnerElement.classList.add('py-2', 'px-6', colors[winner.winner].owned)
+
+  const pElement = document.createElement('p')
+  pElement.className = 'text-center whitespace-nowrap'
+  pElement.textContent = winner.winner.toUpperCase() + ' Wins!!!'
+
+  winnerElement.replaceChildren(pElement)
+  winnerElement.classList.replace('opacity-0', 'opacity-1')
+  winnerElement.classList.replace('max-w-0', 'max-w-min')
+
+  const buttonList = document.querySelectorAll('.btn')
+  buttonList.forEach((buttonElement, index) => {
+    updateButtonGameOver(buttonElement, winner.range.includes(index))
+  })
+}
 
 
 /** Board Initialization */
