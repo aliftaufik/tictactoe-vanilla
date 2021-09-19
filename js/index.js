@@ -1,4 +1,12 @@
+const state = {
+  turn: 'x',
+  board: ['','','','','','','','','']
+}
+
 const buildButton = (owner, turn) => {
+  const wrapperElement = document.createElement('div')
+  wrapperElement.classList.add('w-16', 'h-16', 'p-2', 'btn-wrapper')
+
   const buttonElement = document.createElement('button')
   buttonElement.classList.add('h-full', 'w-full', 'rounded', 'bg-gray-100', 'transition-all')
 
@@ -20,14 +28,35 @@ const buildButton = (owner, turn) => {
     }
   }
 
-  return buttonElement
+  wrapperElement.appendChild(buttonElement)
+  return wrapperElement
+}
+
+const clearBoard = () => {
+  const boardElement = document.getElementById('board')
+  while(boardElement.firstChild) boardElement.removeChild(boardElement.lastChild)
+}
+
+const buildBoard = (state) => {
+  clearBoard()
+
+  const boardElement = document.getElementById('board')
+  const sideLength = Math.sqrt(state.board.length)
+  
+  for (let row = 0; row < sideLength; row++) {
+    const flexElement = document.createElement('div')
+    flexElement.classList.add('flex', 'place-items-center', 'place-content-center')
+    
+    for (let col = 0; col < sideLength; col++) {
+      const currentPosition = row * sideLength + col
+      const buttonElement = buildButton(state.board[currentPosition], state.turn)
+      flexElement.appendChild(buttonElement)
+    }
+
+    boardElement.appendChild(flexElement)
+  }
 }
 
 window.onload = () => {
-  const buttonWrapperList = document.querySelectorAll('.btn-wrapper')
-
-  buttonWrapperList.forEach(wrapper => {
-    const buttonElement = buildButton('', 'x')
-    wrapper.replaceChildren(buttonElement)
-  })
+  buildBoard(state)
 }
