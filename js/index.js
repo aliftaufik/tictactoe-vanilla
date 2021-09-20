@@ -96,6 +96,13 @@ const checkWinner = () => {
   if (validateRange(diagonalUp)) return { winner: diagonalUp[0], range: diagonalUpIndex }
   return null
 }
+
+const handleRestart = () => {
+  state.turn = 'o'
+  state.board = state.board.map(() => '')
+  initBoard()
+}
+
 /** State Change Handler */
 
 /** UI Updater */
@@ -119,7 +126,7 @@ const updateButtonOwned = (buttonElement, owner) => {
   buttonElement.parentElement.classList.remove('hover:p-1')
 
   const pElement = document.createElement('p')
-  pElement.className = 'text-3xl'
+  pElement.className = 'text-3xl mt-1'
 
   if (owner === 'o') {
     pElement.textContent = 'O'
@@ -141,21 +148,6 @@ const updateButtonTurn = (buttonElement, turn) => {
   }
 }
 
-const updateButtonGameOver = (buttonElement, inRange) => {
-  if (inRange) {
-    buttonElement.parentElement.classList.replace('p-2', 'p-1')
-    return
-  }
-
-  buttonElement.classList.remove(colors.o.hover, colors.x.hover)
-  buttonElement.classList.add('opacity-25', 'cursor-default' )
-
-  buttonElement.parentElement.classList.remove('hover:p-1')
-
-  buttonElement.onclick = null
-}
-/** UI Updater */
-
 const gameOver = (winner) => {
   const winnerElement = document.getElementById('winner')
   winnerElement.classList.add('py-2', 'px-6', colors[winner.winner].owned)
@@ -174,6 +166,20 @@ const gameOver = (winner) => {
   })
 }
 
+const updateButtonGameOver = (buttonElement, inRange) => {
+  if (inRange) {
+    buttonElement.parentElement.classList.replace('p-2', 'p-1')
+    return
+  }
+
+  buttonElement.classList.remove(colors.o.hover, colors.x.hover)
+  buttonElement.classList.add('opacity-25', 'cursor-default' )
+
+  buttonElement.parentElement.classList.remove('hover:p-1')
+
+  buttonElement.onclick = null
+}
+/** UI Updater */
 
 /** Board Initialization */
 const buildButton = (turn, position) => {
@@ -198,15 +204,16 @@ const buildButton = (turn, position) => {
   return wrapperElement
 }
 
-const clearBoard = () => {
-  const boardElement = document.getElementById('board')
-  while(boardElement.firstChild) boardElement.removeChild(boardElement.lastChild)
+const clearChildren = (el) => {
+  while(el.firstChild) el.removeChild(el.lastChild)
 }
 
 const initBoard = () => {
-  clearBoard()
+  buildNav()
 
   const boardElement = document.getElementById('board')
+  clearChildren(boardElement)
+
   const sideLength = Math.sqrt(state.board.length)
   
   for (let row = 0; row < sideLength; row++) {
@@ -221,6 +228,32 @@ const initBoard = () => {
 
     boardElement.appendChild(flexElement)
   }
+}
+
+const buildNav = () => {
+  const navElement = document.getElementById('nav')
+  clearChildren(navElement)
+
+  // Back Button
+  const backButton = document.createElement('button')
+  backButton.className ='w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 hover:-mt-2 transition-all duration-[450ms] flex justify-center items-center'
+  const backButtonP = document.createElement('p')
+  backButtonP.className = 'text-3xl mt-1.5'
+  backButtonP.textContent = '<'
+  backButton.appendChild(backButtonP)
+  navElement.appendChild(backButton)
+
+  // Winner Element (will be used to show winner later in the game)
+  const winnerElement = document.createElement('div')
+  winnerElement.id = 'winner'
+  winnerElement.className = 'max-w-0 overflow-hidden rounded-full transition-all duration-[450ms] opacity-0'
+  navElement.appendChild(winnerElement)
+
+  const buttonRestart = document.createElement('button')
+  buttonRestart.className = 'py-2 px-3 rounded-full bg-gray-200 hover:bg-gray-300 hover:-mt-2 transition-all duration-[450ms]'
+  buttonRestart.textContent = 'Restart'
+  buttonRestart.onclick = handleRestart
+  navElement.appendChild(buttonRestart)
 }
 /** Board Initialization */
 
