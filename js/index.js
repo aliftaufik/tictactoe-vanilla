@@ -1,6 +1,16 @@
 /** Constants and utilities */
 const colors = {
-  gray: "bg-gray-200",
+  red: {
+    default: "bg-[#c92c49]",
+    hover: "hover:bg-[#d74761]",
+  },
+  yellow: {
+    default: "bg-[#ffcf56]",
+    hover: "hover:bg-[#ffdc85]",
+  },
+  gray: {
+    default: "bg-gray-200",
+  },
   o: {
     hover: "hover:bg-[#ffd685]",
     owned: "bg-[#ffc857]",
@@ -11,8 +21,12 @@ const colors = {
   },
 };
 
-const animateButtonClass = () => {
-  return `hover:-mt-2 transition-all duration-[450ms]`;
+const elementClasses = {
+  buttonDefaultTransitionClass:
+    "hover:-mt-2 shadow-none hover:shadow-lg transition-all duration-[450ms]",
+  boardButtonDefaultClass:
+    "btn h-full w-full flex justify-center items-center transition-all duration-[450ms]",
+  boardButtonWrapperDefaultClass: "w-16 h-16 transition-all duration-[450ms]",
 };
 
 const awaitDuration = () => {
@@ -26,18 +40,18 @@ const awaitDuration = () => {
 const clearChildren = (el) => {
   while (el.firstChild) el.removeChild(el.lastChild);
 };
-/** Constants */
+/** Constants and utilities */
 
-/** State */
+/** Game State */
 let state = {
   size: 3,
   turn: "o",
   board: [],
 };
-/** State */
+/** Game State */
 
-/** State Change Handler */
-const handleButtonClick = (position) => {
+/** Game Mechanism */
+const handleBoardButtonClick = (position) => {
   const oldState = state;
   const newState = {
     ...oldState,
@@ -49,11 +63,9 @@ const handleButtonClick = (position) => {
   };
   state = newState;
 
-  updateBoard(oldState, newState);
-
-  // Check winner every time button triggered
   const winner = checkWinner();
-  if (winner) gameOver(winner);
+  if (winner) buildWinnerAnnouncer(winner);
+  updateBoard(state, winner);
 };
 
 const checkWinner = () => {
@@ -130,7 +142,25 @@ const checkWinner = () => {
   return null;
 };
 
-const handleRestart = () => {
+const updateBoard = (state, winner) => {
+  const buttonList = document.querySelectorAll(".btn");
+  buttonList.forEach((buttonElement, index) => {
+    if (winner) {
+      buttonElement = buildBoardButtonGameOver(
+        winner.range.includes(index),
+        state.board[index],
+        buttonElement
+      );
+    } else if (state.board[index]) {
+      buttonElement = buildBoardButtonOwned(state.board[index], buttonElement);
+    } else {
+      buttonElement = buildBoardButtonTurn(state.turn, index, buttonElement);
+    }
+  });
+};
+
+// Restart handler, will mutate state and reset board and winner announcer
+const handleRestartButtonClick = () => {
   const oldState = state;
   const newState = {
     ...oldState,
@@ -139,37 +169,46 @@ const handleRestart = () => {
   };
 
   state = newState;
-  updateBoard(oldState, newState);
-};
-/** State Change Handler */
-
-/** UI Updater */
-const updateBoard = (oldState, newState) => {
-  const buttonList = document.querySelectorAll(".btn");
-
-  buttonList.forEach((buttonElement, index) => {
-    if (
-      oldState.board[index] !== newState.board[index] &&
-      !!newState.board[index]
-    ) {
-      updateButtonOwned(buttonElement, newState.board[index]);
-    } else {
-      updateButtonTurn(
-        index,
-        buttonElement,
-        newState.turn,
-        !!newState.board[index]
-      );
-    }
-  });
+  buildWinnerAnnouncer();
+  updateBoard(state);
 };
 
-const updateButtonOwned = (buttonElement, owner) => {
-  buttonElement.classList.replace("rounded-[4px]", "rounded-[50%]");
-  buttonElement.classList.remove(colors.gray, colors.o.hover, colors.x.hover);
-  buttonElement.classList.add("cursor-default");
+// Move from Board to Home and init home
+const handleBackToHome = async () => {
+  // Hide board
+  const boardElement = document.getElementById("board");
+  boardElement.classList.remove("opacity-1");
+  boardElement.classList.add("opacity-0");
 
-  buttonElement.parentElement.classList.remove("hover:p-1");
+  // Hide nav
+  const navElement = document.getElementById("nav");
+  navElement.classList.remove("opacity-1");
+  navElement.classList.add("opacity-0");
+
+  await awaitDuration();
+
+  clearChildren(boardElement);
+  clearChildren(navElement);
+  initHome();
+};
+/** Game Mechanism */
+
+/** Board Button Builder */
+const buildBoardButtonOwned = (owner, buttonElement) => {
+  if (!buttonElement) {
+    buttonElement = document.createElement("button");
+  } else {
+    buttonElement.parentElement.className = [
+      elementClasses.boardButtonWrapperDefaultClass,
+      "p-2",
+    ].join(" ");
+  }
+
+  clearChildren(buttonElement); // Remove owner text
+  buttonElement.className = [
+    elementClasses.boardButtonDefaultClass,
+    "rounded-[50%] cursor-default",
+  ].join(" ");
 
   const pElement = document.createElement("p");
   pElement.className = "text-3xl mt-1";
@@ -184,88 +223,159 @@ const updateButtonOwned = (buttonElement, owner) => {
 
   buttonElement.appendChild(pElement);
   buttonElement.onclick = null;
+
+  return buttonElement;
 };
 
-const updateButtonTurn = (position, buttonElement, turn, owned) => {
-  if (!owned) {
-    buttonElement.classList.replace("rounded-[50%]", "rounded-[4px]");
-    buttonElement.classList.remove(
-      "cursor-default",
-      colors.o.owned,
-      colors.x.owned
-    );
-    buttonElement.classList.add(colors.gray);
-    buttonElement.textContent = "";
-    buttonElement.onclick = () => handleButtonClick(position);
-  }
-  if (turn === "o") {
-    buttonElement.classList.replace(colors.x.hover, colors.o.hover);
+const buildBoardButtonTurn = (turn, position, buttonElement) => {
+  if (!buttonElement) {
+    buttonElement = document.createElement("button");
   } else {
-    buttonElement.classList.replace(colors.o.hover, colors.x.hover);
-  }
-};
-
-const gameOver = (winner) => {
-  const winnerElement = document.getElementById("winner");
-  winnerElement.classList.add("py-2", "px-6", colors[winner.winner].owned);
-
-  const pElement = document.createElement("p");
-  pElement.className = "text-center whitespace-nowrap";
-  pElement.textContent = winner.winner.toUpperCase() + " Wins!!!";
-
-  winnerElement.replaceChildren(pElement);
-  winnerElement.classList.replace("opacity-0", "opacity-1");
-  winnerElement.classList.replace("max-w-0", "max-w-min");
-
-  const buttonList = document.querySelectorAll(".btn");
-  buttonList.forEach((buttonElement, index) => {
-    updateButtonGameOver(buttonElement, winner.range.includes(index));
-  });
-};
-
-const updateButtonGameOver = (buttonElement, inRange) => {
-  if (inRange) {
-    buttonElement.parentElement.classList.replace("p-2", "p-1");
-    return;
+    buttonElement.parentElement.className = [
+      elementClasses.boardButtonWrapperDefaultClass,
+      "p-2 hover:p-1",
+    ].join(" ");
   }
 
-  buttonElement.classList.remove(colors.o.hover, colors.x.hover);
-  buttonElement.classList.add("opacity-25", "cursor-default");
-
-  buttonElement.parentElement.classList.remove("hover:p-1");
-
-  buttonElement.onclick = null;
-};
-/** UI Updater */
-
-/** Board Initialization */
-const buildButton = (turn, position) => {
-  const wrapperElement = document.createElement("div");
-  wrapperElement.className =
-    "w-16 h-16 p-2 hover:p-1 transition-all duration-[450ms]";
-
-  const buttonElement = document.createElement("button");
-  buttonElement.className =
-    "btn h-full w-full rounded-[4px] flex justify-center items-center transition-all duration-[450ms]";
-  buttonElement.classList.add(colors.gray);
+  clearChildren(buttonElement); // Remove owner text
+  buttonElement.className = [
+    elementClasses.boardButtonDefaultClass,
+    "rounded-[4px]",
+    colors.gray.default,
+  ].join(" ");
 
   if (turn === "o") {
     buttonElement.classList.add(colors.o.hover);
-  }
-
-  if (turn === "x") {
+  } else {
     buttonElement.classList.add(colors.x.hover);
   }
 
-  buttonElement.onclick = () => handleButtonClick(position);
+  buttonElement.onclick = () => handleBoardButtonClick(position);
 
+  return buttonElement;
+};
+
+const buildBoardButtonGameOver = (inRange, owner, buttonElement) => {
+  if (!buttonElement) {
+    buttonElement = document.createElement("button");
+  } else {
+    buttonElement.parentElement.className = [
+      elementClasses.boardButtonWrapperDefaultClass,
+      "p-2",
+    ].join(" ");
+  }
+
+  clearChildren(buttonElement); // Remove owner text
+
+  if (owner) {
+    buttonElement = buildBoardButtonOwned(owner, buttonElement);
+    if (inRange) buttonElement.parentElement?.classList.replace("p-2", "p-1");
+  } else {
+    buttonElement.className = [
+      elementClasses.boardButtonDefaultClass,
+      "rounded-[4px] cursor-default",
+      colors.gray.default,
+    ].join(" ");
+  }
+
+  if (!inRange) {
+    buttonElement.classList.add("opacity-25");
+  }
+
+  buttonElement.onclick = null;
+
+  return buttonElement;
+};
+/** Board Button Builder */
+
+/** Winner Announcer Builder */
+const buildWinnerAnnouncer = async (winner) => {
+  let winnerElement = document.getElementById("winner");
+  if (!winnerElement) {
+    winnerElement = document.createElement("div");
+
+    winnerElement.id = "winner";
+
+    const pElement = document.createElement("p");
+    pElement.className = "text-center whitespace-nowrap";
+    winnerElement.replaceChildren(pElement);
+  }
+
+  winnerElement.className =
+    "overflow-hidden rounded-full transition-all duration-[450ms] py-2";
+
+  if (winner) {
+    winnerElement.classList.add(
+      "w-[120px]",
+      "px-6",
+      "opacity-1",
+      colors[winner.winner].owned
+    );
+
+    winnerElement.firstElementChild.textContent =
+      winner.winner.toUpperCase() + " Wins!!!";
+  } else {
+    winnerElement.classList.add("w-0", "px-0", "opacity-0");
+    await awaitDuration();
+    winnerElement.firstElementChild.textContent = "";
+  }
+
+  return winnerElement;
+};
+/** Winner Announcer Builder */
+
+/** Board Initialization */
+const initNav = async () => {
+  const navElement = document.getElementById("nav");
+  clearChildren(navElement);
+
+  // Back Button
+  const backButton = document.createElement("button");
+  backButton.className = [
+    elementClasses.buttonDefaultTransitionClass,
+    `w-10 h-10 rounded-full ${colors.red.default} ${colors.red.hover} flex justify-center items-center`,
+  ].join(" ");
+  backButton.onclick = handleBackToHome;
+  const backButtonP = document.createElement("p");
+  backButtonP.className = "text-3xl mt-1.5";
+  backButtonP.textContent = "<";
+  backButton.appendChild(backButtonP);
+  navElement.appendChild(backButton);
+
+  // Winner Element (will be used to show winner later during the game)
+  const winnerElement = await buildWinnerAnnouncer();
+  navElement.appendChild(winnerElement);
+
+  // Restart Button
+  const buttonRestart = document.createElement("button");
+  buttonRestart.className = [
+    elementClasses.buttonDefaultTransitionClass,
+    `py-2 px-3 rounded-full ${colors.yellow.default} ${colors.yellow.hover}`,
+  ].join(" ");
+  buttonRestart.textContent = "Restart";
+  buttonRestart.onclick = handleRestartButtonClick;
+  navElement.appendChild(buttonRestart);
+
+  // Unhide nav
+  navElement.classList.remove("opacity-0");
+  navElement.classList.add("opacity-1");
+};
+
+// Building board button with wrapper, only used during board initialization
+const initBoardButton = (turn, position) => {
+  const wrapperElement = document.createElement("div");
+  wrapperElement.className = [
+    elementClasses.boardButtonWrapperDefaultClass,
+    "p-2 hover:p-1",
+  ].join(" ");
+
+  const buttonElement = buildBoardButtonTurn(turn, position);
   wrapperElement.appendChild(buttonElement);
+
   return wrapperElement;
 };
 
 const initBoard = () => {
-  initNav();
-
   const boardElement = document.getElementById("board");
   clearChildren(boardElement);
 
@@ -277,100 +387,22 @@ const initBoard = () => {
 
     for (let col = 0; col < sideLength; col++) {
       const currentPosition = row * sideLength + col;
-      const buttonElement = buildButton(state.turn, currentPosition);
-      flexElement.appendChild(buttonElement);
+      const boardButton = initBoardButton(state.turn, currentPosition);
+      flexElement.appendChild(boardButton);
     }
 
     boardElement.appendChild(flexElement);
   }
 
+  // Unhide board
   boardElement.classList.remove("opacity-0");
   boardElement.classList.add("opacity-1");
-};
 
-const initNav = () => {
-  const navElement = document.getElementById("nav");
-  clearChildren(navElement);
-
-  // Back Button
-  const backButton = document.createElement("button");
-  backButton.className =
-    "w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 hover:-mt-2 transition-all duration-[450ms] flex justify-center items-center";
-  backButton.onclick = handleBackToHome;
-  const backButtonP = document.createElement("p");
-  backButtonP.className = "text-3xl mt-1.5";
-  backButtonP.textContent = "<";
-  backButton.appendChild(backButtonP);
-  navElement.appendChild(backButton);
-
-  // Winner Element (will be used to show winner later in the game)
-  const winnerElement = document.createElement("div");
-  winnerElement.id = "winner";
-  winnerElement.className =
-    "max-w-0 overflow-hidden rounded-full transition-all duration-[450ms] opacity-0";
-  navElement.appendChild(winnerElement);
-
-  // Restart Button
-  const buttonRestart = document.createElement("button");
-  buttonRestart.className =
-    "py-2 px-3 rounded-full bg-gray-200 hover:bg-gray-300 hover:-mt-2 transition-all duration-[450ms]";
-  buttonRestart.textContent = "Restart";
-  buttonRestart.onclick = handleRestart;
-  navElement.appendChild(buttonRestart);
-
-  navElement.classList.remove("opacity-0");
-  navElement.classList.add("opacity-1");
-};
-
-// Move from Board to Home and init game
-const handleBackToHome = async () => {
-  const boardElement = document.getElementById("board");
-  boardElement.classList.remove("opacity-1");
-  boardElement.classList.add("opacity-0");
-
-  const navElement = document.getElementById("nav");
-  navElement.classList.remove("opacity-1");
-  navElement.classList.add("opacity-0");
-
-  await awaitDuration();
-
-  clearChildren(boardElement);
-  clearChildren(navElement);
-  initGame();
+  initNav();
 };
 /** Board Initialization */
 
-/** Game Initialization */
-const updateBoardSize = (e, boardSize) => {
-  if (state.size === boardSize) return;
-  state.size = boardSize;
-  updateButtonBoardSizeList(e);
-  updateHomeWording();
-};
-
-const updateButtonBoardSizeList = (e) => {
-  const buttonBoardSizeList = document.querySelectorAll(".btn-board-size");
-  buttonBoardSizeList.forEach((buttonElement) => {
-    if (buttonElement === e.target) {
-      buttonElement.classList.remove("hover:bg-[#ffdc85]");
-      buttonElement.classList.replace("bg-gray-200", "bg-[#ffcf56]");
-    } else {
-      buttonElement.classList.replace("bg-[#ffcf56]", "bg-gray-200");
-      buttonElement.classList.add("hover:bg-[#ffdc85]");
-    }
-  });
-};
-
-const updateHomeWording = async () => {
-  const pBoardSize = document.getElementById("p-board-size");
-  pBoardSize.classList.replace("opacity-1", "opacity-0");
-  await awaitDuration();
-  pBoardSize.textContent = `${state.size} x ${state.size}${
-    state.size === 3 ? " (Standard)" : ""
-  }`;
-  pBoardSize.classList.replace("opacity-0", "opacity-1");
-};
-
+/** Home Initialization */
 const initButtonBoardSizeList = () => {
   const wrapperElement = document.createElement("div");
   wrapperElement.className =
@@ -378,19 +410,17 @@ const initButtonBoardSizeList = () => {
 
   for (let size = 3; size < 12; size += 2) {
     const buttonSize = document.createElement("button");
-    buttonSize.className = animateButtonClass();
-    buttonSize.classList.add(
-      "btn-board-size",
-      "rounded",
-      "px-4",
-      "py-2",
-      "whitespace-nowrap"
-    );
+    buttonSize.className = [
+      elementClasses.buttonDefaultTransitionClass,
+      "btn-board-size rounded px-4 py-2 whitespace-nowrap",
+    ].join(" ");
+
     if (size === state.size) {
-      buttonSize.classList.add("bg-[#ffcf56]");
+      buttonSize.classList.add(colors.yellow.default);
     } else {
-      buttonSize.classList.add("bg-gray-200", "hover:bg-[#ffdc85]");
+      buttonSize.classList.add(colors.gray.default, colors.yellow.hover);
     }
+
     buttonSize.textContent = `${size} x ${size}`;
     buttonSize.onclick = (e) => updateBoardSize(e, size);
     wrapperElement.appendChild(buttonSize);
@@ -399,20 +429,20 @@ const initButtonBoardSizeList = () => {
   return wrapperElement;
 };
 
-const initGame = () => {
+const initHome = () => {
   const homeElement = document.getElementById("home");
   clearChildren(homeElement);
 
   const buttonStart = document.createElement("button");
   buttonStart.className =
-    "rounded px-8 py-4 mt-6 bg-gray-200 transition-all duration-[450ms] bg-[#7aa6cd] hover:bg-[#274a68] hover:text-white";
+    "rounded px-8 py-4 mt-6 transition-all duration-[450ms] bg-[#7aa6cd] hover:bg-[#274a68] hover:text-white";
   buttonStart.textContent = "Start Game";
   buttonStart.onclick = handleStartGame;
   homeElement.appendChild(buttonStart);
 
   const pBoardSize = document.createElement("p");
   pBoardSize.id = "p-board-size";
-  pBoardSize.className = "mt-2 transition-all duration[450ms] opacity-1";
+  pBoardSize.className = "mt-2 transition-opacity duration-[450ms] opacity-1";
   pBoardSize.textContent = `${state.size} x ${state.size}${
     state.size === 3 ? " (Standard)" : ""
   }`;
@@ -426,14 +456,54 @@ const initGame = () => {
   const buttonBoardSizeList = initButtonBoardSizeList();
   homeElement.appendChild(buttonBoardSizeList);
 
+  // Unhide home
   homeElement.classList.remove("opacity-0");
   homeElement.classList.add("opacity-1");
+};
+/** Home Initialization */
+
+/** Home Mechanism */
+const updateBoardSize = (e, boardSize) => {
+  if (state.size === boardSize) return;
+  state.size = boardSize;
+  updateButtonBoardSizeList(e);
+  updateHomeWording(state.size);
+};
+
+const updateButtonBoardSizeList = (e) => {
+  const buttonBoardSizeList = document.querySelectorAll(".btn-board-size");
+  buttonBoardSizeList.forEach((buttonElement) => {
+    if (buttonElement === e.target) {
+      buttonElement.classList.remove(colors.yellow.hover);
+      buttonElement.classList.replace(
+        colors.gray.default,
+        colors.yellow.default
+      );
+    } else {
+      buttonElement.classList.replace(
+        colors.yellow.default,
+        colors.gray.default
+      );
+      buttonElement.classList.add(colors.yellow.hover);
+    }
+  });
+};
+
+const updateHomeWording = async (size) => {
+  const pBoardSize = document.getElementById("p-board-size");
+  pBoardSize.classList.replace("opacity-1", "opacity-0");
+  await awaitDuration();
+  pBoardSize.textContent = `${size} x ${size}${
+    size === 3 ? " (Standard)" : ""
+  }`;
+  pBoardSize.classList.replace("opacity-0", "opacity-1");
 };
 
 // Move from Home to Board and init board
 const handleStartGame = async () => {
   state.board = new Array(state.size * state.size).fill("");
 
+  // Hide home
   const homeElement = document.getElementById("home");
   homeElement.classList.remove("opacity-1");
   homeElement.classList.add("opacity-0");
@@ -443,8 +513,8 @@ const handleStartGame = async () => {
   clearChildren(homeElement);
   initBoard();
 };
-/** Game Initialization */
+/** Home Mechanism */
 
 window.onload = () => {
-  initGame();
+  initHome();
 };
