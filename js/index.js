@@ -26,7 +26,8 @@ const elementClasses = {
     "hover:-mt-2 shadow-none hover:shadow-lg transition-all duration-[450ms]",
   boardButtonDefaultClass:
     "btn h-full w-full flex justify-center items-center transition-all duration-[450ms]",
-  boardButtonWrapperDefaultClass: "w-16 h-16 transition-all duration-[450ms]",
+  boardButtonWrapperDefaultClass:
+    "w-16 h-16 flex-shrink-0 transition-all duration-[450ms]",
 };
 
 const awaitDuration = () => {
@@ -383,7 +384,8 @@ const initBoard = () => {
 
   for (let row = 0; row < sideLength; row++) {
     const flexElement = document.createElement("div");
-    flexElement.className = "flex place-items-center place-content-center";
+    flexElement.className =
+      "w-min flex place-items-center content-center justify-start";
 
     for (let col = 0; col < sideLength; col++) {
       const currentPosition = row * sideLength + col;
