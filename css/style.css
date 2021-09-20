@@ -752,16 +752,6 @@ video {
   background-color: rgba(255, 207, 86, var(--tw-bg-opacity));
 }
 
-.bg-\[\#6bdb83\] {
-  --tw-bg-opacity: 1;
-  background-color: rgba(107, 219, 131, var(--tw-bg-opacity));
-}
-
-.bg-\[\#376996\] {
-  --tw-bg-opacity: 1;
-  background-color: rgba(55, 105, 150, var(--tw-bg-opacity));
-}
-
 .bg-\[\#7aa6cd\] {
   --tw-bg-opacity: 1;
   background-color: rgba(122, 166, 205, var(--tw-bg-opacity));
@@ -800,14 +790,14 @@ video {
   padding-right: 0.75rem;
 }
 
-.py-4 {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
 .px-8 {
   padding-left: 2rem;
   padding-right: 2rem;
+}
+
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .pb-4 {
@@ -840,14 +830,14 @@ video {
   opacity: 0.25;
 }
 
-.transition-all {
-  transition-property: all;
+.transition-opacity {
+  transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
-.transition-opacity {
-  transition-property: opacity;
+.transition-all {
+  transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
@@ -875,19 +865,9 @@ video {
   background-color: rgba(209, 213, 219, var(--tw-bg-opacity));
 }
 
-.hover\:bg-gray-200:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgba(229, 231, 235, var(--tw-bg-opacity));
-}
-
 .hover\:bg-\[\#ffdc85\]:hover {
   --tw-bg-opacity: 1;
   background-color: rgba(255, 220, 133, var(--tw-bg-opacity));
-}
-
-.hover\:bg-\[\#4ad368\]:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgba(74, 211, 104, var(--tw-bg-opacity));
 }
 
 .hover\:bg-\[\#274a68\]:hover {
