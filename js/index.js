@@ -38,6 +38,7 @@ let state = {
 const handleButtonClick = (position) => {
   const oldState = state
   const newState = {
+    ...oldState,
     turn: oldState.turn === 'o' ? 'x' : 'o',
     board: oldState.board.map((item, index) => {
       if (index === position) return oldState.turn
@@ -116,11 +117,16 @@ const checkWinner = () => {
 }
 
 const handleRestart = () => {
-  state.turn = 'o'
-  state.board = state.board.map(() => '')
-  initBoard()
-}
+  const oldState = state
+  const newState = {
+    ...oldState,
+    turn: 'o',
+    board: oldState.board.map(() => '')
+  }
 
+  state = newState
+  updateBoard(oldState, newState)
+}
 /** State Change Handler */
 
 /** UI Updater */
@@ -128,10 +134,10 @@ const updateBoard = (oldState, newState) => {
   const buttonList = document.querySelectorAll('.btn')
 
   buttonList.forEach((buttonElement, index) => {
-    if (oldState.board[index] !== newState.board[index]) {
+    if (oldState.board[index] !== newState.board[index] && !!newState.board[index]) {
       updateButtonOwned(buttonElement, newState.board[index])
     } else {
-      updateButtonTurn(buttonElement, newState.turn)
+      updateButtonTurn(index, buttonElement, newState.turn, !!newState.board[index])
     }
   })
 }
@@ -158,7 +164,14 @@ const updateButtonOwned = (buttonElement, owner) => {
   buttonElement.onclick = null
 }
 
-const updateButtonTurn = (buttonElement, turn) => {
+const updateButtonTurn = (position, buttonElement, turn, owned) => {
+  if (!owned) {
+    buttonElement.classList.replace('rounded-[50%]', 'rounded-[4px]')
+    buttonElement.classList.remove('cursor-default', colors.o.owned, colors.x.owned)
+    buttonElement.classList.add(colors.gray)
+    buttonElement.textContent = ''
+    buttonElement.onclick = () => handleButtonClick(position)
+  }
   if (turn === 'o') {
     buttonElement.classList.replace(colors.x.hover, colors.o.hover)
   } else {
@@ -223,7 +236,7 @@ const buildButton = (turn, position) => {
 }
 
 const initBoard = () => {
-  buildNav()
+  initNav()
 
   const boardElement = document.getElementById('board')
   clearChildren(boardElement)
@@ -247,7 +260,7 @@ const initBoard = () => {
   boardElement.classList.add('opacity-1')
 }
 
-const buildNav = () => {
+const initNav = () => {
   const navElement = document.getElementById('nav')
   clearChildren(navElement)
 
@@ -267,6 +280,7 @@ const buildNav = () => {
   winnerElement.className = 'max-w-0 overflow-hidden rounded-full transition-all duration-[450ms] opacity-0'
   navElement.appendChild(winnerElement)
 
+  // Restart Button
   const buttonRestart = document.createElement('button')
   buttonRestart.className = 'py-2 px-3 rounded-full bg-gray-200 hover:bg-gray-300 hover:-mt-2 transition-all duration-[450ms]'
   buttonRestart.textContent = 'Restart'
@@ -277,6 +291,7 @@ const buildNav = () => {
   navElement.classList.add('opacity-1')
 }
 
+// Move from Board to Home and init game
 const handleBackToHome = async () => {
   const boardElement = document.getElementById('board')
   boardElement.classList.remove('opacity-1')
@@ -295,24 +310,11 @@ const handleBackToHome = async () => {
 /** Board Initialization */
 
 /** Game Initialization */
-const handleStartGame = async () => {
-  state.board = new Array(state.size * state.size).fill('')
-
-  const homeElement = document.getElementById('home')
-  homeElement.classList.remove('opacity-1')
-  homeElement.classList.add('opacity-0')
-
-  await awaitDuration()
-
-  clearChildren(homeElement)
-  initBoard()
-}
-
 const updateBoardSize = (e, boardSize) => {
+  if (state.size === boardSize) return
   state.size = boardSize
   updateButtonBoardSizeList(e)
   updateHomeWording()
-  console.log(state)
 }
 
 const updateButtonBoardSizeList = (e) => {
@@ -336,7 +338,7 @@ const updateHomeWording = async () => {
   pBoardSize.classList.replace('opacity-0', 'opacity-1')
 }
 
-const initBoardSizeList = () => {
+const initButtonBoardSizeList = () => {
   const wrapperElement = document.createElement('div')
   wrapperElement.className = 'flex items-center space-x-2 w-full max-w-[360px] overflow-x-scroll overflow-y-visible pb-4 pt-2 mx-auto'
 
@@ -378,11 +380,25 @@ const initGame = () => {
   pOtherBoard.textContent = 'Or other board size:'
   homeElement.appendChild(pOtherBoard)
 
-  const boardSizeList = initBoardSizeList()
-  homeElement.appendChild(boardSizeList)
+  const buttonBoardSizeList = initButtonBoardSizeList()
+  homeElement.appendChild(buttonBoardSizeList)
 
   homeElement.classList.remove('opacity-0')
   homeElement.classList.add('opacity-1')
+}
+
+// Move from Home to Board and init board
+const handleStartGame = async () => {
+  state.board = new Array(state.size * state.size).fill('')
+
+  const homeElement = document.getElementById('home')
+  homeElement.classList.remove('opacity-1')
+  homeElement.classList.add('opacity-0')
+
+  await awaitDuration()
+
+  clearChildren(homeElement)
+  initBoard()
 }
 /** Game Initialization */
 
