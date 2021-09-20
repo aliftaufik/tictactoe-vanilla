@@ -338,7 +338,7 @@ const updateHomeWording = async () => {
 
 const initBoardSizeList = () => {
   const wrapperElement = document.createElement('div')
-  wrapperElement.className = 'flex items-center space-x-2 w-full max-w-[360px] overflow-x-scroll overflow-y-visible py-4 mx-auto mt-2'
+  wrapperElement.className = 'flex items-center space-x-2 w-full max-w-[360px] overflow-x-scroll overflow-y-visible pb-4 pt-2 mx-auto'
 
   for (let size = 3; size < 12; size += 2) {
     const buttonSize = document.createElement('button')
@@ -362,7 +362,7 @@ const initGame = () => {
   clearChildren(homeElement)
 
   const buttonStart = document.createElement('button')
-  buttonStart.className = 'rounded bg-gray-200 px-8 py-4 mt-6'
+  buttonStart.className = 'rounded px-8 py-4 mt-6 bg-gray-200 transition-all duration-[450ms] bg-[#7aa6cd] hover:bg-[#274a68] hover:text-white'
   buttonStart.textContent = 'Start Game'
   buttonStart.onclick = handleStartGame
   homeElement.appendChild(buttonStart)
