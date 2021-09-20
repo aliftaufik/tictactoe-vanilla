@@ -1,24 +1,112 @@
 /** Constants and utilities */
+const playerColors = [
+  {
+    owned: "bg-[#f82529]",
+    hover: "hover:bg-[#f94144]",
+  },
+  {
+    owned: "bg-[#e75a0d]",
+    hover: "hover:bg-[#f3722c]",
+  },
+  {
+    owned: "bg-[#ed8607]",
+    hover: "hover:bg-[#f8961e]",
+  },
+  {
+    owned: "bg-[#f86c25]",
+    hover: "hover:bg-[#f9844a]",
+  },
+  {
+    owned: "bg-[#f7b926]",
+    hover: "hover:bg-[#f9c74f]",
+  },
+  {
+    owned: "bg-[#7eb356]",
+    hover: "hover:bg-[#90be6d]",
+  },
+  {
+    owned: "bg-[#3a9278]",
+    hover: "hover:bg-[#43aa8b]",
+  },
+  {
+    owned: "bg-[#407776]",
+    hover: "hover:bg-[#4d908e]",
+  },
+  {
+    owned: "bg-[#4d6880]",
+    hover: "hover:bg-[#577590]",
+  },
+  {
+    owned: "bg-[#206683]",
+    hover: "hover:bg-[#277da1]",
+  },
+  {
+    owned: "bg-[#dbd1d9]",
+    hover: "hover:bg-[#eae4e9]",
+  },
+  {
+    owned: "bg-[#ffdcc2]",
+    hover: "hover:bg-[#fff1e6]",
+  },
+  {
+    owned: "bg-[#fbc6c9]",
+    hover: "hover:bg-[#fde2e4]",
+  },
+  {
+    owned: "bg-[#f7b6cd]",
+    hover: "hover:bg-[#fad2e1]",
+  },
+  {
+    owned: "bg-[#cedfda]",
+    hover: "hover:bg-[#e2ece9]",
+  },
+  {
+    owned: "bg-[#a7d6dd]",
+    hover: "hover:bg-[#bee1e6]",
+  },
+  {
+    owned: "bg-[#e5e3dc]",
+    hover: "hover:bg-[#f0efeb]",
+  },
+  {
+    owned: "bg-[#c5d4fb]",
+    hover: "hover:bg-[#dfe7fd]",
+  },
+  {
+    owned: "bg-[#b1c5fc]",
+    hover: "hover:bg-[#cddafd]",
+  },
+];
+
 const colors = {
   red: {
-    default: "bg-[#c92c49]",
-    hover: "hover:bg-[#d74761]",
+    default: "bg-[#fb3640]",
+    hover: "hover:bg-[#fa0f1b]",
+    // default: "bg-[#fc5f67]",
+    // hover: "hover:bg-[#fb3640]",
   },
   yellow: {
-    default: "bg-[#ffcf56]",
-    hover: "hover:bg-[#ffdc85]",
+    default: "bg-[#ffee33]",
+    hover: "hover:bg-[#ffdd00]",
+    // default: "bg-[#ffdd00]",
+    // hover: "hover:bg-[#ffee33]",
   },
   gray: {
-    default: "bg-gray-200",
+    default: "bg-[#eaebeb]",
   },
-  o: {
-    hover: "hover:bg-[#ffd685]",
-    owned: "bg-[#ffc857]",
-  },
-  x: {
-    hover: "hover:bg-[#33aed7]",
-    owned: "bg-[#2596bb]",
-  },
+  o: playerColors[0],
+  x: playerColors[1],
+};
+
+const randomPickPlayerColor = () => {
+  const oIndex = Math.floor(Math.random() * playerColors.length);
+  let xIndex;
+  do {
+    xIndex = Math.floor(Math.random() * playerColors.length);
+  } while (oIndex === xIndex);
+
+  colors.o = playerColors[oIndex];
+  colors.x = playerColors[xIndex];
 };
 
 const elementClasses = {
@@ -41,6 +129,7 @@ const awaitDuration = () => {
 const clearChildren = (el) => {
   while (el.firstChild) el.removeChild(el.lastChild);
 };
+
 /** Constants and utilities */
 
 /** Game State */
@@ -168,8 +257,9 @@ const handleRestartButtonClick = () => {
     turn: "o",
     board: oldState.board.map(() => ""),
   };
-
   state = newState;
+
+  randomPickPlayerColor();
   buildWinnerAnnouncer();
   updateBoard(state);
 };
@@ -351,7 +441,7 @@ const initNav = async () => {
   const buttonRestart = document.createElement("button");
   buttonRestart.className = [
     elementClasses.buttonDefaultTransitionClass,
-    `py-2 px-3 rounded-full ${colors.yellow.default} ${colors.yellow.hover}`,
+    "py-2 px-3 rounded-full bg-[#ffa033] hover:bg-[#ff8800]",
   ].join(" ");
   buttonRestart.textContent = "Restart";
   buttonRestart.onclick = handleRestartButtonClick;
@@ -437,7 +527,7 @@ const initHome = () => {
 
   const buttonStart = document.createElement("button");
   buttonStart.className =
-    "rounded px-8 py-4 mt-6 transition-all duration-[450ms] bg-[#7aa6cd] hover:bg-[#274a68] hover:text-white";
+    "rounded px-8 py-4 mt-6 transition-all duration-[450ms] bg-[#669bbc] hover:bg-[#c1121f] hover:text-white";
   buttonStart.textContent = "Start Game";
   buttonStart.onclick = handleStartGame;
   homeElement.appendChild(buttonStart);
@@ -509,6 +599,8 @@ const handleStartGame = async () => {
   const homeElement = document.getElementById("home");
   homeElement.classList.remove("opacity-1");
   homeElement.classList.add("opacity-0");
+
+  randomPickPlayerColor();
 
   await awaitDuration();
 
