@@ -1,4 +1,4 @@
-/** Constants */
+/** Constants and utilities */
 const colors ={
   gray: 'bg-gray-200',
   o: {
@@ -11,10 +11,28 @@ const colors ={
   }
 }
 
-let state = {
-  turn: 'o',
-  board: new Array(9).fill('')
+const animateButtonClass = () => {
+  return `hover:-mt-2 transition-all duration-[450ms]`
 }
+
+const awaitDuration = () => {
+  return new Promise(resolve => setTimeout(() => {
+    resolve()
+  }, 450))
+}
+
+const clearChildren = (el) => {
+  while(el.firstChild) el.removeChild(el.lastChild)
+}
+/** Constants */
+
+/** State */
+let state = {
+  size: 3,
+  turn: 'o',
+  board: []
+}
+/** State */
 
 /** State Change Handler */
 const handleButtonClick = (position) => {
@@ -204,10 +222,6 @@ const buildButton = (turn, position) => {
   return wrapperElement
 }
 
-const clearChildren = (el) => {
-  while(el.firstChild) el.removeChild(el.lastChild)
-}
-
 const initBoard = () => {
   buildNav()
 
@@ -228,6 +242,9 @@ const initBoard = () => {
 
     boardElement.appendChild(flexElement)
   }
+
+  boardElement.classList.remove('opacity-0')
+  boardElement.classList.add('opacity-1')
 }
 
 const buildNav = () => {
@@ -237,6 +254,7 @@ const buildNav = () => {
   // Back Button
   const backButton = document.createElement('button')
   backButton.className ='w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 hover:-mt-2 transition-all duration-[450ms] flex justify-center items-center'
+  backButton.onclick = handleBackToHome
   const backButtonP = document.createElement('p')
   backButtonP.className = 'text-3xl mt-1.5'
   backButtonP.textContent = '<'
@@ -254,9 +272,120 @@ const buildNav = () => {
   buttonRestart.textContent = 'Restart'
   buttonRestart.onclick = handleRestart
   navElement.appendChild(buttonRestart)
+
+  navElement.classList.remove('opacity-0')
+  navElement.classList.add('opacity-1')
+}
+
+const handleBackToHome = async () => {
+  const boardElement = document.getElementById('board')
+  boardElement.classList.remove('opacity-1')
+  boardElement.classList.add('opacity-0')
+
+  const navElement = document.getElementById('nav')
+  navElement.classList.remove('opacity-1')
+  navElement.classList.add('opacity-0')
+
+  await awaitDuration()
+
+  clearChildren(boardElement)
+  clearChildren(navElement)
+  initGame()
 }
 /** Board Initialization */
 
-window.onload = () => {
+/** Game Initialization */
+const handleStartGame = async () => {
+  state.board = new Array(state.size * state.size).fill('')
+
+  const homeElement = document.getElementById('home')
+  homeElement.classList.remove('opacity-1')
+  homeElement.classList.add('opacity-0')
+
+  await awaitDuration()
+
+  clearChildren(homeElement)
   initBoard()
+}
+
+const updateBoardSize = (e, boardSize) => {
+  state.size = boardSize
+  updateButtonBoardSizeList(e)
+  updateHomeWording()
+  console.log(state)
+}
+
+const updateButtonBoardSizeList = (e) => {
+  const buttonBoardSizeList = document.querySelectorAll('.btn-board-size')
+  buttonBoardSizeList.forEach(buttonElement => {
+    if (buttonElement === e.target) {
+      buttonElement.classList.remove('hover:bg-[#ffdc85]')
+      buttonElement.classList.replace('bg-gray-200', 'bg-[#ffcf56]')
+    } else {
+      buttonElement.classList.replace('bg-[#ffcf56]', 'bg-gray-200')
+      buttonElement.classList.add('hover:bg-[#ffdc85]')
+    }
+  })
+}
+
+const updateHomeWording = async () => {
+  const pBoardSize = document.getElementById('p-board-size')
+  pBoardSize.classList.replace('opacity-1', 'opacity-0')
+  await awaitDuration()
+  pBoardSize.textContent = `${state.size} x ${state.size}${state.size === 3 ? ' (Standard)' : ''}`
+  pBoardSize.classList.replace('opacity-0', 'opacity-1')
+}
+
+const initBoardSizeList = () => {
+  const wrapperElement = document.createElement('div')
+  wrapperElement.className = 'flex items-center space-x-2 w-full max-w-[360px] overflow-x-scroll overflow-y-visible py-4 mx-auto mt-2'
+
+  for (let size = 3; size < 12; size += 2) {
+    const buttonSize = document.createElement('button')
+    buttonSize.className = animateButtonClass()
+    buttonSize.classList.add('btn-board-size', 'rounded', 'px-4', 'py-2', 'whitespace-nowrap')
+    if (size === state.size) {
+      buttonSize.classList.add('bg-[#ffcf56]')
+    } else {
+      buttonSize.classList.add('bg-gray-200', 'hover:bg-[#ffdc85]')
+    }
+    buttonSize.textContent = `${size} x ${size}`
+    buttonSize.onclick = (e) => updateBoardSize(e, size)
+    wrapperElement.appendChild(buttonSize)
+  }
+
+  return wrapperElement
+}
+
+const initGame = () => {
+  const homeElement = document.getElementById('home')
+  clearChildren(homeElement)
+
+  const buttonStart = document.createElement('button')
+  buttonStart.className = 'rounded bg-gray-200 px-8 py-4 mt-6'
+  buttonStart.textContent = 'Start Game'
+  buttonStart.onclick = handleStartGame
+  homeElement.appendChild(buttonStart)
+
+  const pBoardSize = document.createElement('p')
+  pBoardSize.id = 'p-board-size'
+  pBoardSize.className = 'mt-2 transition-all duration[450ms] opacity-1'
+  pBoardSize.textContent = '3 x 3 (Standard)'
+  homeElement.appendChild(pBoardSize)
+
+  const pOtherBoard = document.createElement('p')
+  pOtherBoard.className = 'mt-8'
+  pOtherBoard.textContent = 'Or other board size:'
+  homeElement.appendChild(pOtherBoard)
+
+  const boardSizeList = initBoardSizeList()
+  homeElement.appendChild(boardSizeList)
+
+  homeElement.classList.remove('opacity-0')
+  homeElement.classList.add('opacity-1')
+}
+/** Game Initialization */
+
+window.onload = () => {
+  initGame()
 }
