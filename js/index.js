@@ -5,10 +5,6 @@ const playerColors = [
     hover: "hover:bg-[#f94144]",
   },
   {
-    owned: "bg-[#e75a0d]",
-    hover: "hover:bg-[#f3722c]",
-  },
-  {
     owned: "bg-[#ed8607]",
     hover: "hover:bg-[#f8961e]",
   },
@@ -94,6 +90,9 @@ const colors = {
   gray: {
     default: "bg-[#eaebeb]",
   },
+  draw: {
+    owned: "bg-[#eaebeb]",
+  },
   o: playerColors[0],
   x: playerColors[1],
 };
@@ -154,7 +153,9 @@ const handleBoardButtonClick = (position) => {
   state = newState;
 
   const winner = checkWinner();
+  const draw = state.board.every((item) => !!item);
   if (winner) buildWinnerAnnouncer(winner);
+  else if (draw) buildWinnerAnnouncer({ winner: "draw" });
   updateBoard(state, winner);
 };
 
@@ -404,7 +405,9 @@ const buildWinnerAnnouncer = async (winner) => {
     );
 
     winnerElement.firstElementChild.textContent =
-      winner.winner.toUpperCase() + " Wins!!!";
+      winner.winner === "draw"
+        ? "Draw!!!"
+        : winner.winner.toUpperCase() + " Wins!!!";
   } else {
     winnerElement.classList.add("w-0", "px-0", "opacity-0");
     await awaitDuration();
