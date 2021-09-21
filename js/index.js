@@ -268,8 +268,8 @@ const handleRestartButtonClick = () => {
 const handleBackToHome = async () => {
   // Hide board
   const boardElement = document.getElementById("board");
-  boardElement.classList.remove("opacity-1");
-  boardElement.classList.add("opacity-0");
+  boardElement.parentElement.classList.remove("opacity-1");
+  boardElement.parentElement.classList.add("opacity-0");
 
   // Hide nav
   const navElement = document.getElementById("nav");
@@ -487,8 +487,8 @@ const initBoard = () => {
   }
 
   // Unhide board
-  boardElement.classList.remove("opacity-0");
-  boardElement.classList.add("opacity-1");
+  boardElement.parentElement.classList.remove("opacity-0");
+  boardElement.parentElement.classList.add("opacity-1");
 
   initNav();
 };
@@ -496,9 +496,13 @@ const initBoard = () => {
 
 /** Home Initialization */
 const initButtonBoardSizeList = () => {
+  const parentWrapper = document.createElement("div");
+  parentWrapper.className = "w-screen overflow-x-scroll";
   const wrapperElement = document.createElement("div");
   wrapperElement.className =
-    "flex items-center space-x-2 w-full max-w-[360px] overflow-x-scroll overflow-y-visible pb-4 pt-2 mx-auto";
+    "flex items-center space-x-2 w-min overflow-y-visible px-4 pb-4 pt-2 mx-auto";
+
+  parentWrapper.appendChild(wrapperElement);
 
   for (let size = 3; size < 12; size += 2) {
     const buttonSize = document.createElement("button");
@@ -518,7 +522,7 @@ const initButtonBoardSizeList = () => {
     wrapperElement.appendChild(buttonSize);
   }
 
-  return wrapperElement;
+  return parentWrapper;
 };
 
 const initHome = () => {
