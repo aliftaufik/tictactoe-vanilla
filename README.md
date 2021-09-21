@@ -1,6 +1,6 @@
 # tictactoe-vanilla
 
-Tictactoe game using vanilla javascript
+A tictactoe game using vanilla javascript. You can clone this repo and start the game by accessing index.html without any build setup or host server required. Or you can see the live demo [here](https://tictactoe-aliftaufik.netlify.app/).
 
 ### Development Summary
 
