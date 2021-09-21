@@ -133,7 +133,7 @@ const clearChildren = (el) => {
 
 /** Game State */
 let state = {
-  size: 3,
+  size: "3",
   turn: "o",
   board: [],
 };
@@ -498,34 +498,68 @@ const initBoard = () => {
 /** Board Initialization */
 
 /** Home Initialization */
-const initButtonBoardSizeList = () => {
-  const parentWrapper = document.createElement("div");
-  parentWrapper.className = "w-screen overflow-x-scroll";
-  const wrapperElement = document.createElement("div");
-  wrapperElement.className =
-    "flex items-center space-x-2 w-min overflow-y-visible px-4 pb-4 pt-2 mx-auto";
+// const initButtonBoardSizeList = () => {
+//   const parentWrapper = document.createElement("div");
+//   parentWrapper.className = "w-screen overflow-x-scroll";
+//   const wrapperElement = document.createElement("div");
+//   wrapperElement.className =
+//     "flex items-center space-x-2 w-min overflow-y-visible px-4 pb-4 pt-2 mx-auto";
 
-  parentWrapper.appendChild(wrapperElement);
+//   parentWrapper.appendChild(wrapperElement);
 
-  for (let size = 3; size < 12; size += 2) {
-    const buttonSize = document.createElement("button");
-    buttonSize.className = [
-      elementClasses.buttonDefaultTransitionClass,
-      "btn-board-size rounded px-4 py-2 whitespace-nowrap",
-    ].join(" ");
+//   for (let size = 3; size < 12; size += 2) {
+//     const buttonSize = document.createElement("button");
+//     buttonSize.className = [
+//       elementClasses.buttonDefaultTransitionClass,
+//       "btn-board-size rounded px-4 py-2 whitespace-nowrap",
+//     ].join(" ");
 
-    if (size === state.size) {
-      buttonSize.classList.add(colors.yellow.default);
-    } else {
-      buttonSize.classList.add(colors.gray.default, colors.yellow.hover);
-    }
+//     if (size === state.size) {
+//       buttonSize.classList.add(colors.yellow.default);
+//     } else {
+//       buttonSize.classList.add(colors.gray.default, colors.yellow.hover);
+//     }
 
-    buttonSize.textContent = `${size} x ${size}`;
-    buttonSize.onclick = (e) => updateBoardSize(e, size);
-    wrapperElement.appendChild(buttonSize);
-  }
+//     buttonSize.textContent = `${size} x ${size}`;
+//     buttonSize.onclick = (e) => updateBoardSize(e, size);
+//     wrapperElement.appendChild(buttonSize);
+//   }
 
-  return parentWrapper;
+//   return parentWrapper;
+// };
+
+const initInputBoardSize = () => {
+  const wrapper = document.createElement("div");
+  wrapper.className = "flex justify-center items-center mt-4 group";
+
+  const pBoardSize = document.createElement("p");
+  pBoardSize.className = "mr-2";
+  pBoardSize.textContent = "Board size: ";
+  wrapper.appendChild(pBoardSize);
+
+  const inputElement = document.createElement("input");
+  inputElement.id = "input-size";
+  inputElement.className =
+    "rounded px-2 py-1 outline-none text-right transition-all group-hover:ring-2 focus:ring-2 group-hover:ring-[#fb3640] focus:ring-[#fb3640] group-hover:mr-2 focus:mr-2";
+  inputElement.value = state.size;
+  inputElement.size = state.size.length;
+  inputElement.oninput = handleBoardSizeInput;
+  inputElement.onblur = handleBoardSizeBlur;
+  wrapper.appendChild(inputElement);
+
+  const xLabelElement = document.createElement("label");
+  xLabelElement.htmlFor = "input-size";
+  xLabelElement.textContent = "x";
+  wrapper.appendChild(xLabelElement);
+
+  const labelElement = document.createElement("label");
+  labelElement.id = "label-size";
+  labelElement.htmlFor = "input-size";
+  labelElement.className = "ml-2 transition-opacity duration-[450ms] opacity-1";
+  labelElement.textContent = state.size;
+  wrapper.appendChild(labelElement);
+
+  return wrapper;
 };
 
 const initHome = () => {
@@ -539,20 +573,7 @@ const initHome = () => {
   buttonStart.onclick = handleStartGame;
   homeElement.appendChild(buttonStart);
 
-  const pBoardSize = document.createElement("p");
-  pBoardSize.id = "p-board-size";
-  pBoardSize.className = "mt-2 transition-opacity duration-[450ms] opacity-1";
-  pBoardSize.textContent = `${state.size} x ${state.size}${
-    state.size === 3 ? " (Standard)" : ""
-  }`;
-  homeElement.appendChild(pBoardSize);
-
-  const pOtherBoard = document.createElement("p");
-  pOtherBoard.className = "mt-8";
-  pOtherBoard.textContent = "Or other board size:";
-  homeElement.appendChild(pOtherBoard);
-
-  const buttonBoardSizeList = initButtonBoardSizeList();
+  const buttonBoardSizeList = initInputBoardSize();
   homeElement.appendChild(buttonBoardSizeList);
 
   // Unhide home
@@ -562,45 +583,89 @@ const initHome = () => {
 /** Home Initialization */
 
 /** Home Mechanism */
-const updateBoardSize = (e, boardSize) => {
-  if (state.size === boardSize) return;
-  state.size = boardSize;
-  updateButtonBoardSizeList(e);
-  updateHomeWording(state.size);
+const handleBoardSizeBlur = (e) => {
+  let value = Number(e.target.value);
+  if (value < 3) value = 3;
+  if (value % 2 === 0) value = value - 1;
+
+  state.size = String(value);
+
+  updateBoardSizeInput(state.size);
+  updateBoardSizeLabel(state.size);
 };
 
-const updateButtonBoardSizeList = (e) => {
-  const buttonBoardSizeList = document.querySelectorAll(".btn-board-size");
-  buttonBoardSizeList.forEach((buttonElement) => {
-    if (buttonElement === e.target) {
-      buttonElement.classList.remove(colors.yellow.hover);
-      buttonElement.classList.replace(
-        colors.gray.default,
-        colors.yellow.default
-      );
-    } else {
-      buttonElement.classList.replace(
-        colors.yellow.default,
-        colors.gray.default
-      );
-      buttonElement.classList.add(colors.yellow.hover);
-    }
-  });
+const handleBoardSizeInput = (e) => {
+  let value = e.target.value.replace(/[^0-9]+/gi, "");
+  if (value.length > 1 && value.startsWith("0")) value = value.substr(1);
+  else if (!value) value = "0";
+  if (Number(value) > 65535) value = String(65535);
+  state.size = value;
+
+  updateBoardSizeInput(state.size);
+  updateBoardSizeLabel(state.size);
 };
 
-const updateHomeWording = async (size) => {
-  const pBoardSize = document.getElementById("p-board-size");
-  pBoardSize.classList.replace("opacity-1", "opacity-0");
-  await awaitDuration();
-  pBoardSize.textContent = `${size} x ${size}${
-    size === 3 ? " (Standard)" : ""
-  }`;
-  pBoardSize.classList.replace("opacity-0", "opacity-1");
+const updateBoardSizeInput = (size) => {
+  const inputElement = document.getElementById("input-size");
+  inputElement.value = size;
+
+  inputElement.size = size.length;
 };
+
+let debouncerId = null;
+const updateBoardSizeLabel = (size) => {
+  const labelElement = document.getElementById("label-size");
+  labelElement.classList.remove("opacity-1");
+  labelElement.classList.add("opacity-0");
+
+  clearTimeout(debouncerId);
+  debouncerId = setTimeout(() => {
+    labelElement.textContent = size;
+    labelElement.classList.remove("opacity-0");
+    labelElement.classList.add("opacity-1");
+  }, 600);
+};
+
+// const updateBoardSize = (e, boardSize) => {
+//   if (state.size === boardSize) return;
+//   state.size = boardSize;
+//   updateButtonBoardSizeList(e);
+//   updateHomeWording(state.size);
+// };
+
+// const updateButtonBoardSizeList = (e) => {
+//   const buttonBoardSizeList = document.querySelectorAll(".btn-board-size");
+//   buttonBoardSizeList.forEach((buttonElement) => {
+//     if (buttonElement === e.target) {
+//       buttonElement.classList.remove(colors.yellow.hover);
+//       buttonElement.classList.replace(
+//         colors.gray.default,
+//         colors.yellow.default
+//       );
+//     } else {
+//       buttonElement.classList.replace(
+//         colors.yellow.default,
+//         colors.gray.default
+//       );
+//       buttonElement.classList.add(colors.yellow.hover);
+//     }
+//   });
+// };
+
+// const updateHomeWording = async (size) => {
+//   const pBoardSize = document.getElementById("p-board-size");
+//   pBoardSize.classList.replace("opacity-1", "opacity-0");
+//   await awaitDuration();
+//   pBoardSize.textContent = `${size} x ${size}${
+//     size === 3 ? " (Standard)" : ""
+//   }`;
+//   pBoardSize.classList.replace("opacity-0", "opacity-1");
+// };
 
 // Move from Home to Board and init board
 const handleStartGame = async () => {
-  state.board = new Array(state.size * state.size).fill("");
+  const size = Number(state.size);
+  state.board = new Array(size * size).fill("");
 
   // Hide home
   const homeElement = document.getElementById("home");
