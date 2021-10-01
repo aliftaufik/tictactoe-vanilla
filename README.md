@@ -2,6 +2,19 @@
 
 A tictactoe game using vanilla javascript. You can clone this repo and start the game by accessing index.html without any build setup or host server required. Or you can see the live demo [here](https://tictactoe-aliftaufik.netlify.app/).
 
+### Update Notes
+I've done updating the implementation as requested. Now users can type in the board size they desire. The input will also validate the value (whether it's a valid number, it's equal or greater than 3, and it's an odd number) and readjust the value.
+
+However, I cannot make it able to retrieve very large numbers. This is due to Javascript's limitation on array size creation. The maximum size possible of an array is 4,294,967,295. So, I had to limit the board size to 65,535 x 65,535. More than it and it will throw an error.
+
+And also, a very big array consumes a lot of memories. Although it's possible to create 65,535 x 65,535 board size, even 1,000 x 1,000 (which means an array with the size of 1 million) board size already crashes my browser, throwing an out-of-memory error.
+
+But as it is an out-of-memory error, it's technically possible for a user with gigantic memory to create an array with such size, so I didn't implement any restriction for this case.
+
+There might be a better approach to overcome this limitation and make it truly possible for users to set any board size without causing any harm. But since I already implemented the game that way, and changing its core implementation requires a lot of time (basically it's like rewriting everything from scratch), I'll settle with the current implementation.
+
+I hope my excuse is understandable. Thank you so much.
+
 ### Development Summary
 
 Technology used:
